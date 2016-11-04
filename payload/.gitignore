@@ -1,4 +1,5 @@
-.vc/
+.vs/
 *.vcxproj.user
 *.sdf
 x64/
+Debug/
