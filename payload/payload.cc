@@ -32,6 +32,8 @@
 
 #ifdef __APPLE__
     #include <dlfcn.h> // dlsym, RTLD_NEXT. Mac only
+#else
+    #include <windows.h> // Windows APIs for DLLMain.
 #endif
 
 // CEF apis.
