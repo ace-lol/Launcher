@@ -64,12 +64,12 @@
     #define OVERRIDES(function_name) \
       static decltype(function_name)* original_##function_name = NULL; \
       if (!original_##function_name) original_##function_name = (decltype(function_name)*) dlsym(RTLD_NEXT, #function_name)
-    #define cef_initialize cef_initialize
-    #define cef_browser_host_create_browser cef_browser_host_create_browser
+    #define _cef_initialize cef_initialize
+    #define _cef_browser_host_create_browser cef_browser_host_create_browser
 #else
     #define OVERRIDES(function_name)
-    #define cef_initialize wrapped_cef_initialize
-    #define cef_browser_host_create_browser wrapped_cef_browser_host_create_browser
+    #define _cef_initialize wrapped_cef_initialize
+    #define _cef_browser_host_create_browser wrapped_cef_browser_host_create_browser
     #define original_cef_initialize cef_initialize
     #define original_cef_browser_host_create_browser cef_browser_host_create_browser
 #endif
@@ -136,7 +136,7 @@ extern "C" {
     // We use this to enable remote debugging and the ignoring of certificate errors.
     // TODO(molenzwiebel): Change ignore_certificate_errors to a custom callback
     // on the cef_request_handler_t struct instead.
-    int cef_initialize(cef_main_args_t* args, cef_settings_t* settings, cef_app_t* application, void* windows_sandbox_info) {
+    int _cef_initialize(cef_main_args_t* args, cef_settings_t* settings, cef_app_t* application, void* windows_sandbox_info) {
         OVERRIDES(cef_initialize);
 
         settings->remote_debugging_port = 8888;
@@ -147,7 +147,7 @@ extern "C" {
 
     // Called when a new browser host is created. We hook this to insert our
     // own request handler, which is then able to insert Ace before any plugin loads.
-    int cef_browser_host_create_browser(const cef_window_info_t* window_info, cef_client_t* client, const cef_string_t* url, const cef_browser_settings_t* settings, cef_request_context_t* request_context) {
+    int _cef_browser_host_create_browser(const cef_window_info_t* window_info, cef_client_t* client, const cef_string_t* url, const cef_browser_settings_t* settings, cef_request_context_t* request_context) {
 	    OVERRIDES(cef_browser_host_create_browser);
 	
 	    old_request_handler = client->get_request_handler;

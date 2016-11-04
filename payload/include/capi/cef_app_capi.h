@@ -132,9 +132,9 @@ CEF_EXPORT int cef_execute_process(const struct _cef_main_args_t* args,
 // failed. The |windows_sandbox_info| parameter is only used on Windows and may
 // be NULL (see cef_sandbox_win.h for details).
 ///
-//CEF_EXPORT int cef_initialize(const struct _cef_main_args_t* args,
-//    const struct _cef_settings_t* settings, cef_app_t* application,
-//    void* windows_sandbox_info);
+CEF_EXPORT int cef_initialize(const struct _cef_main_args_t* args,
+    const struct _cef_settings_t* settings, cef_app_t* application,
+    void* windows_sandbox_info);
 
 ///
 // This function should be called on the main application thread to shut down
