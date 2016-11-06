@@ -136,11 +136,25 @@ extern "C" {
     // We use this to enable remote debugging and the ignoring of certificate errors.
     // TODO(molenzwiebel): Change ignore_certificate_errors to a custom callback
     // on the cef_request_handler_t struct instead.
-    int _cef_initialize(cef_main_args_t* args, cef_settings_t* settings, cef_app_t* application, void* windows_sandbox_info) {
+    int CEF_EXPORT _cef_initialize(const cef_main_args_t* args, const cef_settings_t* settings, cef_app_t* application, void* windows_sandbox_info) {
         OVERRIDES(cef_initialize);
 
-        settings->remote_debugging_port = 8888;
-        settings->ignore_certificate_errors = 1;
+        // Copy over the old arguments.
+        char** new_args = new char*[args->argc + 1];
+        for (int i = 0; i < args->argc; i++) {
+            new_args[i] = args->argv[i];
+        }
+
+        // Add `--allow-running-insecure-content` so we can serve our payload over HTTP.
+        new_args[args->argc] = "--allow-running-insecure-content";
+
+        // Write the new args. Note that we need to cast away the const specifier.
+        ((cef_main_args_t*) args)->argv = new_args; 
+        ((cef_main_args_t*) args)->argc++;
+
+        cef_settings_t* mutable_settings = (cef_settings_t*) settings;
+        mutable_settings->remote_debugging_port = 8888;
+        mutable_settings->ignore_certificate_errors = 1;
 
         return original_cef_initialize(args, settings, application, windows_sandbox_info);
     }
