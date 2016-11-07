@@ -139,6 +139,7 @@ extern "C" {
     int CEF_EXPORT _cef_initialize(const cef_main_args_t* args, const cef_settings_t* settings, cef_app_t* application, void* windows_sandbox_info) {
         OVERRIDES(cef_initialize);
 
+#ifdef __APPLE__
         // Copy over the old arguments.
         char** new_args = new char*[args->argc + 1];
         for (int i = 0; i < args->argc; i++) {
@@ -151,6 +152,14 @@ extern "C" {
         // Write the new args. Note that we need to cast away the const specifier.
         ((cef_main_args_t*) args)->argv = new_args; 
         ((cef_main_args_t*) args)->argc++;
+#else
+		// TODO(molenzwiebel): This is very, very, very, very, very, very, very (cont)
+		// very, very, very, very, very, very dirty and undefined behavior. FIX THIS.
+		// It is literally a wonder that this does not cause buffer overflows.
+		LPTSTR arg_ptr = GetCommandLineW();
+		LPTSTR extra = L" --allow-running-insecure-content";
+		wcsncat(arg_ptr, extra, lstrlenW(extra));
+#endif
 
         cef_settings_t* mutable_settings = (cef_settings_t*) settings;
         mutable_settings->remote_debugging_port = 8888;
