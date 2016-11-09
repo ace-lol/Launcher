@@ -50,15 +50,10 @@
  * specific injection/replacing logic.
  *
  * A broad overview of what they do:
- * OVERRIDES(function_name), used to indicate which function is overridden in the current function body:
- *   Mac: Looks up the original function and prepares it for eventual calling.
- *   Win: Does nothing.
- * cef_initialize, used as function name for the replacement cef_initialize function.
- *   Mac: cef_initialize
- *   Win: wrapped_cef_initialize
- * CEF_CREATE_BROWSER, used as function name for the replacement cef_browser_host_create_browser function.
- *   Mac: cef_browser_host_create_browser
- *   Win: wrapped_cef_browser_host_create_browser
+ * DYLD_INTERPOSE(_replacement, _replacee): Tells DYLD on macOS to replace any lookups of _replacee
+ *   with the function provided in _replacement instead. _replacement has free access to the original
+ *   which makes it a great way to intercept calls to functions.
+ *   On Windows, this does nothing.
  */
 #ifdef __APPLE__
     #define DYLD_INTERPOSE(_replacement, _replacee) \
@@ -139,7 +134,9 @@ extern "C" {
         }
 
         // Add `--allow-running-insecure-content` so we can serve our payload over HTTP.
-        new_args[args->argc] = "--allow-running-insecure-content";
+        // String is extracted to prevent -Wc++11-compat-deprecated-writable-strings warning.
+        const char* flag = "--allow-running-insecure-content";
+        new_args[args->argc] = (char*) flag;
 
         // Write the new args. Note that we need to cast away the const specifier.
         ((cef_main_args_t*) args)->argv = new_args; 

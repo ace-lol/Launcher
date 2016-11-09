@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Halt on errors.
+set -e
+
 # The path to the `Chromium Embedded Framework` binary file.
 # This is usually something along the lines of
 # /Applications/League of Legends.app/Contents/LoL/RADS/projects/league_client/releases/HIGHEST_NUMBER/deploy/LeagueClientUx.app/Contents/MacOS/Chromium Embedded Framework
