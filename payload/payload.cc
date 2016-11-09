@@ -61,17 +61,11 @@
  *   Win: wrapped_cef_browser_host_create_browser
  */
 #ifdef __APPLE__
-    #define OVERRIDES(function_name) \
-      static decltype(function_name)* original_##function_name = NULL; \
-      if (!original_##function_name) original_##function_name = (decltype(function_name)*) dlsym(RTLD_NEXT, #function_name)
-    #define _cef_initialize cef_initialize
-    #define _cef_browser_host_create_browser cef_browser_host_create_browser
+    #define DYLD_INTERPOSE(_replacement, _replacee) \
+        __attribute__((used)) static struct{ const void* replacement; const void* replacee; } _interpose_##_replacee \
+        __attribute__ ((section ("__DATA,__interpose"))) = { (const void*)(unsigned long)&_replacement, (const void*)(unsigned long)&_replacee };
 #else
-    #define OVERRIDES(function_name)
-    #define _cef_initialize wrapped_cef_initialize
-    #define _cef_browser_host_create_browser wrapped_cef_browser_host_create_browser
-    #define original_cef_initialize cef_initialize
-    #define original_cef_browser_host_create_browser cef_browser_host_create_browser
+    #define DYLD_INTERPOSE(_replacement, _replacee)
 #endif
 
 #ifdef _WIN32
@@ -136,9 +130,7 @@ extern "C" {
     // We use this to enable remote debugging and the ignoring of certificate errors.
     // TODO(molenzwiebel): Change ignore_certificate_errors to a custom callback
     // on the cef_request_handler_t struct instead.
-    int CEF_EXPORT _cef_initialize(const cef_main_args_t* args, const cef_settings_t* settings, cef_app_t* application, void* windows_sandbox_info) {
-        OVERRIDES(cef_initialize);
-
+    int CEF_EXPORT wrapped_cef_initialize(const cef_main_args_t* args, const cef_settings_t* settings, cef_app_t* application, void* windows_sandbox_info) {
 #ifdef __APPLE__
         // Copy over the old arguments.
         char** new_args = new char*[args->argc + 1];
@@ -165,19 +157,23 @@ extern "C" {
         mutable_settings->remote_debugging_port = 8888;
         mutable_settings->ignore_certificate_errors = 1;
 
-        return original_cef_initialize(args, settings, application, windows_sandbox_info);
+        return cef_initialize(args, settings, application, windows_sandbox_info);
     }
+
+    // Interpose new function, does nothing on windows.
+    DYLD_INTERPOSE(wrapped_cef_initialize, cef_initialize);
 
     // Called when a new browser host is created. We hook this to insert our
     // own request handler, which is then able to insert Ace before any plugin loads.
-    int _cef_browser_host_create_browser(const cef_window_info_t* window_info, cef_client_t* client, const cef_string_t* url, const cef_browser_settings_t* settings, cef_request_context_t* request_context) {
-	    OVERRIDES(cef_browser_host_create_browser);
-	
+    int wrapped_cef_browser_host_create_browser(const cef_window_info_t* window_info, cef_client_t* client, const cef_string_t* url, const cef_browser_settings_t* settings, cef_request_context_t* request_context) {	
 	    old_request_handler = client->get_request_handler;
 	    client->get_request_handler = get_request_handler;
 
-	    return original_cef_browser_host_create_browser(window_info, client, url, settings, request_context);
+	    return cef_browser_host_create_browser(window_info, client, url, settings, request_context);
     }
+
+    // Interpose new function, does nothing on windows.
+    DYLD_INTERPOSE(wrapped_cef_browser_host_create_browser, cef_browser_host_create_browser);
 }
 
 #endif // __x86_64__ || _WIN32
