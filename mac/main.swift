@@ -63,7 +63,7 @@ let dylib_path = Bundle.main.path(forResource: "payload", ofType: "dylib")!
 let inject_path = Bundle.main.path(forResource: "inject", ofType: "js")!
 
 // Construct command that launches league.
-let command = "cd '\(binary_path)/Contents/LoL' && DYLD_FORCE_FLAT_NAMESPACE=1 DYLD_INSERT_LIBRARIES='\(dylib_path)' ACE_PAYLOAD_PATH='\(inject_path)' LeagueClient.app/Contents/MacOS/LeagueClient"
+let command = "cd '\(binary_path)/Contents/LoL' && DYLD_INSERT_LIBRARIES='\(dylib_path)' ACE_PAYLOAD_PATH='\(inject_path)' LeagueClient.app/Contents/MacOS/LeagueClient"
 
 // Liftoff!
 let _ = exec_shell(command)
