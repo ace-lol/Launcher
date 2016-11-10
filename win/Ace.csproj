@@ -81,9 +81,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\ace_daemon.exe" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\bundle.js" />
   </ItemGroup>
   <ItemGroup>

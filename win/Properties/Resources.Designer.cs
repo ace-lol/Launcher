@@ -61,29 +61,7 @@ namespace Ace.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] ace_daemon {
-            get {
-                object obj = ResourceManager.GetObject("ace_daemon", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to /******/ (function (modules) { // webpackBootstrap
-        ///    /******/ 	// The module cache
-        ///    /******/ 	var installedModules = {};
-        ///
-        ///    /******/ 	// The require function
-        ///    /******/ 	function __webpack_require__(moduleId) {
-        ///
-        ///        /******/ 		// Check if module is in cache
-        ///        /******/ 		if (installedModules[moduleId])
-        ///            /******/ 			return installedModules[moduleId].exports;
-        ///
-        ///        /******/ 		// Create a new module (and put it into the cache)
-        ///        /******/ 		var module = installe [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string with the contents of bundle.js.
         /// </summary>
         internal static string bundle {
             get {
@@ -92,18 +70,7 @@ namespace Ace.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to // If Ace isn&apos;t loaded and we aren&apos;t currently
-        ///// loading it, load it.
-        ///if (!window.Ace &amp;&amp; !document.querySelector(&quot;#ace-load-script&quot;)) {
-        ///    const el = document.createElement(&quot;script&quot;);
-        ///    el.type = &quot;text/javascript&quot;;
-        ///    el.id = &quot;ace-load-script&quot;;
-        ///    // TODO(molenzwiebel): Might need to make this configurable.
-        ///    el.src = &quot;http://localhost:19283/bundle&quot;;
-        ///    document.head.appendChild(el);
-        ///}
-        ///
-        ///Array.prototype.slice.call(document.head.querySelectorAll(&apos;link[data-plugin-name]&apos;)).filter(el =&gt; !el.onload._hoo [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string with the contents of inject.js.
         /// </summary>
         internal static string inject {
             get {

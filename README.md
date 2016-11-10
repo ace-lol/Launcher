@@ -5,7 +5,6 @@ Executable that launches the LCU with Ace loaded and ready to go.
 ## Building - Windows
 Open the attached project in `win/`. The project expects various resources to be present, which will need to be added (right click Project -> Properties -> Resources):
 - `inject.js`: The inject.js file in the root of this repository.
-- `ace_daemon.exe`: The compiled Daemon executable.
 - `Payload.dll`: The compiled Payload DLL.
 - `bundle.js`: The packaged Ace JavaScript/HTML/css.  
 **The files will need to have these exact names!**
@@ -14,7 +13,6 @@ When distributing, use [ILMerge](https://www.microsoft.com/en-us/download/detail
 
 ## Building - Mac
 Open the attached project in `mac/`. The project expects various resources to be present, which will need to be added:
-- `ace_deamon`: The compiled Daemon executable.
 - `payload.dylib`: The compiled Payload library.
 - `bundle.js`: The packaged Ace JavaScript/HTML/css.
 

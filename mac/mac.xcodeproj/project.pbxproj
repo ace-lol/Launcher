@@ -11,7 +11,6 @@
 		9C2103B31DCE4EBA005DC570 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C2103B21DCE4EBA005DC570 /* main.swift */; };
 		9C2103B71DCE4FA5005DC570 /* inject.js in Resources */ = {isa = PBXBuildFile; fileRef = 9C2103B61DCE4FA5005DC570 /* inject.js */; };
 		9C2103BA1DCF43B4005DC570 /* bundle.js in Resources */ = {isa = PBXBuildFile; fileRef = 9C2103B81DCF43B4005DC570 /* bundle.js */; };
-		9C2103BB1DCF43B4005DC570 /* ace_daemon in Resources */ = {isa = PBXBuildFile; fileRef = 9C2103B91DCF43B4005DC570 /* ace_daemon */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,7 +18,6 @@
 		9C2103B41DCE4ECF005DC570 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
 		9C2103B61DCE4FA5005DC570 /* inject.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = inject.js; path = ../inject.js; sourceTree = SOURCE_ROOT; };
 		9C2103B81DCF43B4005DC570 /* bundle.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = bundle.js; sourceTree = SOURCE_ROOT; };
-		9C2103B91DCF43B4005DC570 /* ace_daemon */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = ace_daemon; sourceTree = SOURCE_ROOT; };
 		9C3B7D231DCE4E0B00FC24FF /* payload.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = payload.dylib; sourceTree = SOURCE_ROOT; };
 		9C488F7D1DCCE2B3005D70A0 /* Ace.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ace.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -55,7 +53,6 @@
 			isa = PBXGroup;
 			children = (
 				9C2103B81DCF43B4005DC570 /* bundle.js */,
-				9C2103B91DCF43B4005DC570 /* ace_daemon */,
 				9C2103B61DCE4FA5005DC570 /* inject.js */,
 				9C2103B41DCE4ECF005DC570 /* Info.plist */,
 				9C2103B21DCE4EBA005DC570 /* main.swift */,
@@ -126,7 +123,6 @@
 			files = (
 				9C2103B01DCE4E8D005DC570 /* payload.dylib in Resources */,
 				9C2103BA1DCF43B4005DC570 /* bundle.js in Resources */,
-				9C2103BB1DCF43B4005DC570 /* ace_daemon in Resources */,
 				9C2103B71DCE4FA5005DC570 /* inject.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

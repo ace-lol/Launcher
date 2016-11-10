@@ -54,26 +54,14 @@ namespace Ace
                 Properties.Settings.Default.LCUPath = path;
                 Properties.Settings.Default.Save();
 
-                String tmpDir = Path.Combine(Path.GetTempPath(), "ace_daemon");
+                String tmpDir = Path.Combine(Path.GetTempPath(), "ace");
                 if (!Directory.Exists(tmpDir)) Directory.CreateDirectory(tmpDir);
 
                 String injectJsPath = Path.Combine(tmpDir, "inject.js");
                 File.WriteAllBytes(injectJsPath, Encoding.UTF8.GetBytes(Properties.Resources.inject));
 
-                // If ace_daemon isn't currently running.
-                if (Process.GetProcessesByName("ace_daemon").Length == 0)
-                {
-                    // Extract resources.
-                    String exePath = Path.Combine(tmpDir, "ace_daemon.exe");
-                    String bundleJsPath = Path.Combine(tmpDir, "bundle.js");
-
-                    File.WriteAllBytes(exePath, Properties.Resources.ace_daemon);
-                    File.WriteAllBytes(bundleJsPath, Encoding.UTF8.GetBytes(Properties.Resources.bundle));
-
-                    // Start aced_daemon in background.
-                    ProcessStartInfo info = new ProcessStartInfo { FileName = exePath, WorkingDirectory = tmpDir, CreateNoWindow = true, UseShellExecute = false };
-                    Process.Start(info);
-                }
+                String bundleJsPath = Path.Combine(tmpDir, "bundle.js");
+                File.WriteAllBytes(bundleJsPath, Encoding.UTF8.GetBytes(Properties.Resources.bundle));
 
                 String releasePath = GetClientProjectPath(path);
 
@@ -100,20 +88,22 @@ namespace Ace
 
                 // Start league :)
                 ProcessStartInfo startInfo = new ProcessStartInfo { FileName = path, UseShellExecute = false };
-                startInfo.EnvironmentVariables["ACE_PAYLOAD_PATH"] = injectJsPath;
+                startInfo.EnvironmentVariables["ACE_INITIAL_PAYLOAD"] = bundleJsPath;
+                startInfo.EnvironmentVariables["ACE_LOAD_PAYLOAD"] = injectJsPath;
                 Process.Start(startInfo);
-            }catch(Exception e)
-            {
-                MessageBox.Show("Error: " + e.ToString(), "What the fuck", MessageBoxButtons.OK, MessageBoxIcon.Question);
+            } catch(Exception e) {
+                MessageBox.Show("An error occured during startup. Please try again and do not hesitate to report the issue if it does not resolve itself. The error was: " + e.ToString(), "Error during startup.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
         }
 
+        // Checks if the provided path is most likely a path where the LCU is installed.
         static Boolean IsPathValid(String path)
         {
             String folder = Path.GetDirectoryName(path);
             return File.Exists(path) && Directory.Exists(folder + "/RADS") && Directory.Exists(folder + "/RADS/projects/league_client");
         }
 
+        // Finds the newest league_client release and returns the path to that release.
         static String GetClientProjectPath(String path)
         {
             String p = Path.GetDirectoryName(path) + "/RADS/projects/league_client/releases";

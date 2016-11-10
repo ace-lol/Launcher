@@ -48,22 +48,13 @@ while !valid {
 UserDefaults.standard.setValue(binary_path, forKey: "leagueclient_path")
 UserDefaults.standard.synchronize()
 
-// Check if the daemon is already running
-let task = exec_shell("ps -Ac | grep 'ace_daemon' > /dev/null")
-task.waitUntilExit()
-
-if task.terminationStatus == 1 {
-    // Start ace_daemon
-    let resources_path = Bundle.main.bundlePath + "/Contents/Resources"
-    let _ = exec_shell("cd '\(resources_path)' && ./ace_daemon")
-}
-
 // Find the paths for the things we want to inject.
 let dylib_path = Bundle.main.path(forResource: "payload", ofType: "dylib")!
+let bundle_path = Bundle.main.path(forResource: "bundle", ofType: "js")!
 let inject_path = Bundle.main.path(forResource: "inject", ofType: "js")!
 
 // Construct command that launches league.
-let command = "cd '\(binary_path)/Contents/LoL' && DYLD_INSERT_LIBRARIES='\(dylib_path)' ACE_PAYLOAD_PATH='\(inject_path)' LeagueClient.app/Contents/MacOS/LeagueClient"
+let command = "cd '\(binary_path)/Contents/LoL' && DYLD_INSERT_LIBRARIES='\(dylib_path)' ACE_INITIAL_PAYLOAD='\(bundle_path)' ACE_LOAD_PAYLOAD='\(inject_path)' LeagueClient.app/Contents/MacOS/LeagueClient"
 
 // Liftoff!
 let _ = exec_shell(command)
