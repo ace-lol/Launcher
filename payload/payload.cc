@@ -42,7 +42,8 @@
 #include "include/capi/cef_client_capi.h"
 #include "include/capi/cef_request_handler_capi.h"
 
-#define JAVASCRIPT_PAYLOAD getenv("ACE_PAYLOAD_PATH")
+#define INITIAL_PAYLOAD getenv("ACE_INITIAL_PAYLOAD")
+#define LOAD_PAYLOAD getenv("ACE_LOAD_PAYLOAD")
 
 /*
  * To prevent code duplication between platforms, we define
@@ -58,7 +59,7 @@
 #ifdef __APPLE__
     #define DYLD_INTERPOSE(_replacement, _replacee) \
         __attribute__((used)) static struct{ const void* replacement; const void* replacee; } _interpose_##_replacee \
-        __attribute__ ((section ("__DATA,__interpose"))) = { (const void*)(unsigned long)&_replacement, (const void*)(unsigned long)&_replacee };
+        __attribute__((section("__DATA,__interpose"))) = { (const void*)(unsigned long)&_replacement, (const void*)(unsigned long)&_replacee };
 #else
     #define DYLD_INTERPOSE(_replacement, _replacee)
 #endif
@@ -84,18 +85,30 @@ extern "C" {
     // CEF so we can run code just _before_ the first plugin is fetched. An environment
     // variable is used to determine which payload to inject, if any.
     cef_return_value_t CEF_CALLBACK on_before_resource_load(cef_request_handler_t* self, cef_browser_t* browser, cef_frame_t* frame, cef_request_t* request, cef_request_callback_t* callback) {
-	    // We have to do this workaround to get from the LCU 16-bit CEF strings to
+	    static bool did_initial_inject = true;
+        
+        // We have to do this workaround to get from the LCU 16-bit CEF strings to
 	    // the 8-bit strings (char*s) that C++ uses. 
 	    cef_string_userfree_t url = request->get_url(request);
         cef_string_utf8_t str = {};
         cef_string_utf16_to_utf8(url->str, url->length, &str);
 
+        // graph.json is only loaded at the initial page load, and thus a good
+        // way to see when the page loads. This way, we also reinject on page
+        // refresh, and we are sure to only inject on pages with plugin-runner.
+        if (strstr(str.str, "/graph.json")) {
+            did_initial_inject = false;
+        }
+
 	    // This is a crude but effective way to check if we are loading
 	    // what seems to be a plugin.
-	    if (strstr(str.str, "/fe/") && strstr(str.str, "/index.html") && JAVASCRIPT_PAYLOAD) {
-		    // Read the code that has to be injected and replace __URL__ with the appropriate environment var.
-            std::ifstream fin(JAVASCRIPT_PAYLOAD);
+	    if (strstr(str.str, "/fe/") && strstr(str.str, "/index.html") && LOAD_PAYLOAD) {
+		    // Read the code that has to be injected, and convert it to std::string.
+            std::ifstream fin(did_initial_inject ? LOAD_PAYLOAD : INITIAL_PAYLOAD);
             std::string code((std::istreambuf_iterator<char>(fin)), std::istreambuf_iterator<char>());
+            
+            // It doesn't matter what the previous value was, we did the initial inject now.
+            did_initial_inject = true;
 
 		    // Convert the 8-bit string back to the CEF string type.
 		    cef_string_t js_str = {};
@@ -126,30 +139,6 @@ extern "C" {
     // TODO(molenzwiebel): Change ignore_certificate_errors to a custom callback
     // on the cef_request_handler_t struct instead.
     int CEF_EXPORT wrapped_cef_initialize(const cef_main_args_t* args, const cef_settings_t* settings, cef_app_t* application, void* windows_sandbox_info) {
-#ifdef __APPLE__
-        // Copy over the old arguments.
-        char** new_args = new char*[args->argc + 1];
-        for (int i = 0; i < args->argc; i++) {
-            new_args[i] = args->argv[i];
-        }
-
-        // Add `--allow-running-insecure-content` so we can serve our payload over HTTP.
-        // String is extracted to prevent -Wc++11-compat-deprecated-writable-strings warning.
-        const char* flag = "--allow-running-insecure-content";
-        new_args[args->argc] = (char*) flag;
-
-        // Write the new args. Note that we need to cast away the const specifier.
-        ((cef_main_args_t*) args)->argv = new_args; 
-        ((cef_main_args_t*) args)->argc++;
-#else
-		// TODO(molenzwiebel): This is very, very, very, very, very, very, very (cont)
-		// very, very, very, very, very, very dirty and undefined behavior. FIX THIS.
-		// It is literally a wonder that this does not cause buffer overflows.
-		LPTSTR arg_ptr = GetCommandLineW();
-		LPTSTR extra = L" --allow-running-insecure-content";
-		wcsncat(arg_ptr, extra, lstrlenW(extra));
-#endif
-
         cef_settings_t* mutable_settings = (cef_settings_t*) settings;
         mutable_settings->remote_debugging_port = 8888;
         mutable_settings->ignore_certificate_errors = 1;
