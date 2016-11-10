@@ -12,8 +12,4 @@ Open the attached project in `win/`. The project expects various resources to be
 When distributing, use [ILMerge](https://www.microsoft.com/en-us/download/details.aspx?id=17630) to merge the code pack DLLs into a single executable (this is not needed during development).
 
 ## Building - Mac
-Open the attached project in `mac/`. The project expects various resources to be present, which will need to be added:
-- `payload.dylib`: The compiled Payload library. Instructions for compiling the payload can be found at `payload/README.md`.
-- `bundle.js`: The packaged Ace JavaScript/HTML/css.
-
-For all of the above mentioned resources, make sure that they are added to `Copy Bundle Resources` and that `payload.dylib` is _not_ added in `Link Binary with Libraries`.
+Open the attached project in `mac/`. The project automatically compiles `payload.dylib` using `compile_mac.sh` in `payload/` as part of the build process, so ignore that Xcode shows it as missing. The project expects a `bundle.js` file with the bundled Ace source, which needs to be added manually. Make sure that when adding `bundle.js`, the file is added to the target and is listed in `Copy Bundle Resources`.

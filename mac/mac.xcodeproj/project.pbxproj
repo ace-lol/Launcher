@@ -18,7 +18,7 @@
 		9C2103B41DCE4ECF005DC570 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = SOURCE_ROOT; };
 		9C2103B61DCE4FA5005DC570 /* inject.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; name = inject.js; path = ../inject.js; sourceTree = SOURCE_ROOT; };
 		9C2103B81DCF43B4005DC570 /* bundle.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = bundle.js; sourceTree = SOURCE_ROOT; };
-		9C3B7D231DCE4E0B00FC24FF /* payload.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = payload.dylib; sourceTree = SOURCE_ROOT; };
+		9C3B7D231DCE4E0B00FC24FF /* payload.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = payload.dylib; path = ../payload/payload.dylib; sourceTree = SOURCE_ROOT; };
 		9C488F7D1DCCE2B3005D70A0 /* Ace.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ace.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -71,6 +71,7 @@
 				9C488F791DCCE2B2005D70A0 /* Sources */,
 				9C488F7A1DCCE2B2005D70A0 /* Frameworks */,
 				9C488F7B1DCCE2B2005D70A0 /* Resources */,
+				9C2930D71DD4D1ED0098DBBA /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -128,6 +129,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		9C2930D71DD4D1ED0098DBBA /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd \"$PROJECT_DIR\"/../payload\n./compile_mac.sh";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		9C488F791DCCE2B2005D70A0 /* Sources */ = {

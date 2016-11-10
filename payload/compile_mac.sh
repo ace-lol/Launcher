@@ -11,7 +11,7 @@ CEF_PATH=''
 # If there is no path set, exit.
 if [ -z "$CEF_PATH" ]; then
     echo "No path to the 'Chromium Embedded Framework' binary file set.";
-    echo "Edit compile_osx.sh, then run this again.";
+    echo "Edit compile_osx.sh in 'payload/', then build or run this again.";
     exit 1;
 fi
 
