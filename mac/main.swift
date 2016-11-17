@@ -2,7 +2,7 @@ import Foundation
 import Cocoa
 
 // Checks if the specified path to an .app bundle is most likely the league installation.
-func is_valid_binary(_ path: String) -> Bool {
+func is_valid_binary(_ binary_path: String) -> Bool {
     return FileManager.default.fileExists(atPath: binary_path)
         && FileManager.default.fileExists(atPath: binary_path + "/Contents/LoL/RADS/projects/league_client")
         && FileManager.default.fileExists(atPath: binary_path + "/Contents/LoL/LeagueClient.app")

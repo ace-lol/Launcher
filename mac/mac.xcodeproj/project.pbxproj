@@ -11,6 +11,7 @@
 		9C2103B31DCE4EBA005DC570 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C2103B21DCE4EBA005DC570 /* main.swift */; };
 		9C2103B71DCE4FA5005DC570 /* inject.js in Resources */ = {isa = PBXBuildFile; fileRef = 9C2103B61DCE4FA5005DC570 /* inject.js */; };
 		9C2103BA1DCF43B4005DC570 /* bundle.js in Resources */ = {isa = PBXBuildFile; fileRef = 9C2103B81DCF43B4005DC570 /* bundle.js */; };
+		9CED2F8B1DDDEFC300BAD78C /* Semver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CED2F8A1DDDEFC300BAD78C /* Semver.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +21,7 @@
 		9C2103B81DCF43B4005DC570 /* bundle.js */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.javascript; path = bundle.js; sourceTree = SOURCE_ROOT; };
 		9C3B7D231DCE4E0B00FC24FF /* payload.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = payload.dylib; path = ../payload/payload.dylib; sourceTree = SOURCE_ROOT; };
 		9C488F7D1DCCE2B3005D70A0 /* Ace.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ace.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9CED2F8A1DDDEFC300BAD78C /* Semver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Semver.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,6 +59,7 @@
 				9C2103B41DCE4ECF005DC570 /* Info.plist */,
 				9C2103B21DCE4EBA005DC570 /* main.swift */,
 				9C3B7D231DCE4E0B00FC24FF /* payload.dylib */,
+				9CED2F8A1DDDEFC300BAD78C /* Semver.swift */,
 			);
 			path = mac;
 			sourceTree = "<group>";
@@ -152,6 +155,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9C2103B31DCE4EBA005DC570 /* main.swift in Sources */,
+				9CED2F8B1DDDEFC300BAD78C /* Semver.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
