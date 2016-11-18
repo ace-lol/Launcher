@@ -16,7 +16,7 @@ func startAce(path: String) {
     let command = "cd '\(path)/Contents/LoL' && DYLD_INSERT_LIBRARIES='\(dylibPath)' ACE_INITIAL_PAYLOAD='\(bundlePath)' ACE_LOAD_PAYLOAD='\(injectPath)' LeagueClient.app/Contents/MacOS/LeagueClient"
     
     // Liftoff!
-    let _ = execShell(command)
+    execShell(command).waitUntilExit()
 }
 
 /**
