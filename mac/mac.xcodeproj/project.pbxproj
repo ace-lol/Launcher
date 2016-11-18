@@ -62,6 +62,7 @@
 		9C488F741DCCE2B2005D70A0 = {
 			isa = PBXGroup;
 			children = (
+				9CAD908D1DDFB5F5009DCC20 /* Images.xcassets */,
 				9C488F7F1DCCE2B3005D70A0 /* mac */,
 				9C488F7E1DCCE2B3005D70A0 /* Products */,
 			);
@@ -81,7 +82,6 @@
 				9C1175991DDFB7F500E48E60 /* Sources */,
 				9C11759A1DDFB7FF00E48E60 /* Bundles */,
 				9C2103B41DCE4ECF005DC570 /* Info.plist */,
-				9CAD908D1DDFB5F5009DCC20 /* Images.xcassets */,
 			);
 			path = mac;
 			sourceTree = "<group>";
