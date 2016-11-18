@@ -50,8 +50,8 @@ struct Regex {
     
     init(pattern: String) {
         self.pattern = pattern
-        expressionOptions = NSRegularExpression.Options.caseInsensitive
-        matchingOptions = NSRegularExpression.MatchingOptions.reportProgress
+        expressionOptions = .caseInsensitive
+        matchingOptions = .reportProgress
         updateRegex()
     }
     
@@ -150,7 +150,7 @@ public class Semver {
         }
         
         if (patch.compare(version.patch) != .orderedSame) {
-            return patch.compare(version.patch, options: NSString.CompareOptions.numeric).rawValue
+            return patch.compare(version.patch, options: .numeric).rawValue
         }
         
         return 0
@@ -172,7 +172,7 @@ public class Semver {
     }
     
     public func clean() -> String{
-        versionStr = versionStr.trimmingCharacters(in: NSCharacterSet.whitespaces)
+        versionStr = versionStr.trimmingCharacters(in: .whitespaces)
         return versionStr.replace(pattern: "^[=v]+", template: "")
     }
     
