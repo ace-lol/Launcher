@@ -12,6 +12,7 @@
 		9C2103B71DCE4FA5005DC570 /* inject.js in Resources */ = {isa = PBXBuildFile; fileRef = 9C2103B61DCE4FA5005DC570 /* inject.js */; };
 		9C2103BA1DCF43B4005DC570 /* bundle.js in Resources */ = {isa = PBXBuildFile; fileRef = 9C2103B81DCF43B4005DC570 /* bundle.js */; };
 		9CAD908A1DDE397D009DCC20 /* util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CAD90891DDE397D009DCC20 /* util.swift */; };
+		9CAD908E1DDFB5F5009DCC20 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9CAD908D1DDFB5F5009DCC20 /* Images.xcassets */; };
 		9CED2F8B1DDDEFC300BAD78C /* Semver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CED2F8A1DDDEFC300BAD78C /* Semver.swift */; };
 /* End PBXBuildFile section */
 
@@ -23,6 +24,7 @@
 		9C3B7D231DCE4E0B00FC24FF /* payload.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = payload.dylib; path = ../payload/payload.dylib; sourceTree = SOURCE_ROOT; };
 		9C488F7D1DCCE2B3005D70A0 /* Ace.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ace.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9CAD90891DDE397D009DCC20 /* util.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = util.swift; sourceTree = SOURCE_ROOT; };
+		9CAD908D1DDFB5F5009DCC20 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		9CED2F8A1DDDEFC300BAD78C /* Semver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Semver.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -37,6 +39,26 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		9C1175991DDFB7F500E48E60 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				9C2103B21DCE4EBA005DC570 /* main.swift */,
+				9CED2F8A1DDDEFC300BAD78C /* Semver.swift */,
+				9CAD90891DDE397D009DCC20 /* util.swift */,
+			);
+			name = Sources;
+			sourceTree = "<group>";
+		};
+		9C11759A1DDFB7FF00E48E60 /* Bundles */ = {
+			isa = PBXGroup;
+			children = (
+				9C2103B81DCF43B4005DC570 /* bundle.js */,
+				9C2103B61DCE4FA5005DC570 /* inject.js */,
+				9C3B7D231DCE4E0B00FC24FF /* payload.dylib */,
+			);
+			name = Bundles;
+			sourceTree = "<group>";
+		};
 		9C488F741DCCE2B2005D70A0 = {
 			isa = PBXGroup;
 			children = (
@@ -56,13 +78,10 @@
 		9C488F7F1DCCE2B3005D70A0 /* mac */ = {
 			isa = PBXGroup;
 			children = (
-				9C2103B81DCF43B4005DC570 /* bundle.js */,
-				9C2103B61DCE4FA5005DC570 /* inject.js */,
+				9C1175991DDFB7F500E48E60 /* Sources */,
+				9C11759A1DDFB7FF00E48E60 /* Bundles */,
 				9C2103B41DCE4ECF005DC570 /* Info.plist */,
-				9C2103B21DCE4EBA005DC570 /* main.swift */,
-				9C3B7D231DCE4E0B00FC24FF /* payload.dylib */,
-				9CED2F8A1DDDEFC300BAD78C /* Semver.swift */,
-				9CAD90891DDE397D009DCC20 /* util.swift */,
+				9CAD908D1DDFB5F5009DCC20 /* Images.xcassets */,
 			);
 			path = mac;
 			sourceTree = "<group>";
@@ -129,6 +148,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				9C2103B01DCE4E8D005DC570 /* payload.dylib in Resources */,
+				9CAD908E1DDFB5F5009DCC20 /* Images.xcassets in Resources */,
 				9C2103BA1DCF43B4005DC570 /* bundle.js in Resources */,
 				9C2103B71DCE4FA5005DC570 /* inject.js in Resources */,
 			);
