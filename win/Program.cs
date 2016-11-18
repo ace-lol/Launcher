@@ -4,7 +4,10 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Linq;
+using System.Net;
+using Semver;
 
 namespace Ace
 {
@@ -17,96 +20,230 @@ namespace Ace
         static void Main()
         {
             try {
-                String path = Properties.Settings.Default.LCUPath;
-                Boolean valid = IsPathValid(path);
+                string path = GetLCUPath();
+                if (path == null) return;
 
-                while (!valid)
+                // If league is already running, prompt to kill it.
+                if (Process.GetProcessesByName("LeagueClient").Length > 0)
                 {
-                    // Notify that the path is invalid.
-                    MessageBox.Show(
-                        "Ace could not find the LCU at " + path + ". Please select the folder containing 'LeagueClient.exe'.",
-                        "LCU not found",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Exclamation
+                    DialogResult promptResult = MessageBox.Show(
+                        "The League client is already running. Do you want to stop it?",
+                        "Ace",
+                        MessageBoxButtons.OKCancel,
+                        MessageBoxIcon.Information,
+                        MessageBoxDefaultButton.Button1
                     );
 
-                    // Ask for new path.
-                    CommonOpenFileDialog dialog = new CommonOpenFileDialog();
-                    dialog.Title = "Select LeagueClient.exe location.";
-                    dialog.InitialDirectory = "C:/Riot Games";
-                    dialog.EnsureFileExists = true;
-                    dialog.EnsurePathExists = true;
-                    dialog.DefaultFileName = "LeagueClient";
-                    dialog.DefaultExtension = "exe";
-                    dialog.Filters.Add(new CommonFileDialogFilter("Executables", ".exe"));
-                    dialog.Filters.Add(new CommonFileDialogFilter("All Files", ".*"));
-                    if (dialog.ShowDialog() == CommonFileDialogResult.Cancel)
+                    if (promptResult == DialogResult.OK)
                     {
-                        // User wants to cancel. Exit
+                        KillLCU();
+                    } else {
+                        // Stop ace.
                         return;
                     }
-
-                    path = dialog.FileName;
-                    valid = IsPathValid(path);
                 }
 
-                // Store choice so we don't have to ask for it again.
-                Properties.Settings.Default.LCUPath = path;
-                Properties.Settings.Default.Save();
+                LaunchLCU(path);
 
-                String tmpDir = Path.Combine(Path.GetTempPath(), "ace");
-                if (!Directory.Exists(tmpDir)) Directory.CreateDirectory(tmpDir);
-
-                String injectJsPath = Path.Combine(tmpDir, "inject.js");
-                File.WriteAllBytes(injectJsPath, Encoding.UTF8.GetBytes(Properties.Resources.inject));
-
-                String bundleJsPath = Path.Combine(tmpDir, "bundle.js");
-                File.WriteAllBytes(bundleJsPath, Encoding.UTF8.GetBytes(Properties.Resources.bundle));
-
-                String releasePath = GetClientProjectPath(path);
-
-                // If league has marked the installation as invalid, the restore will overwrite our changes.
-                // We want to make sure that the user knows this.
-                if (File.Exists(releasePath + "/RestoreBackup"))
+                if (Update())
                 {
-                    MessageBox.Show(
-                        "League has marked the LCU installation as corrupt and will attempt to repair the installation when we start it. This will overwrite the changes that Ace applies. In order to fix this, let the installation fully repair itself and then close the League client using the X in the top right corner. After that, start Ace again to reinstall Ace into your League installation.",
-                        "Warning",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning
+                    DialogResult promptResult = MessageBox.Show(
+                        "Ace has downloaded and installed an update, which will become active with the next restart of the League client. Do you want to restart the League client now?",
+                        "Ace Updater",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Information,
+                        MessageBoxDefaultButton.Button1
                     );
+
+                    if (promptResult == DialogResult.Yes)
+                    {
+                        // Kill LCU, then restart it.
+                        KillLCU();
+                        LaunchLCU(path);
+                    }
                 }
-
-                // If libcefOriginal.dll doesn't exist, this is our first run (or after a patch).
-                if (!File.Exists(releasePath + "/deploy/libcefOriginal.dll"))
-                {
-                    File.Move(releasePath + "/deploy/libcef.dll", releasePath + "/deploy/libcefOriginal.dll");
-                }
-
-                // Overwrite the dll every time, just in case.
-                File.WriteAllBytes(releasePath + "/deploy/libcef.dll", Properties.Resources.Payload);
-
-                // Start league :)
-                ProcessStartInfo startInfo = new ProcessStartInfo { FileName = path, UseShellExecute = false };
-                startInfo.EnvironmentVariables["ACE_INITIAL_PAYLOAD"] = bundleJsPath;
-                startInfo.EnvironmentVariables["ACE_LOAD_PAYLOAD"] = injectJsPath;
-                Process.Start(startInfo);
-            } catch(Exception e) {
+            } catch (Exception e) {
                 MessageBox.Show("An error occured during startup. Please try again and do not hesitate to report the issue if it does not resolve itself. The error was: " + e.ToString(), "Error during startup.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
         }
 
-        // Checks if the provided path is most likely a path where the LCU is installed.
-        static Boolean IsPathValid(String path)
+        // Launches the LCU with the provided path.
+        static void LaunchLCU(string path)
         {
-            String folder = Path.GetDirectoryName(path);
+            string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ace");
+            string injectJsPath = Path.Combine(dataDir, "inject.js");
+            string bundleJsPath = Path.Combine(dataDir, "bundle.js");
+            string payloadDllPath = Path.Combine(dataDir, "payload.dll");
+
+            // If the directory didn't exist, create it and copy the files.
+            if (!Directory.Exists(dataDir))
+            {
+                Directory.CreateDirectory(dataDir);
+
+                File.WriteAllBytes(injectJsPath, Encoding.UTF8.GetBytes(Properties.Resources.inject));
+                File.WriteAllBytes(bundleJsPath, Encoding.UTF8.GetBytes(Properties.Resources.bundle));
+                File.WriteAllBytes(payloadDllPath, Properties.Resources.Payload);
+            }            
+
+            string releasePath = GetClientProjectPath(path);
+
+            // If libcefOriginal.dll doesn't exist, this is our first run (or after a patch).
+            if (!File.Exists(releasePath + "/deploy/libcefOriginal.dll"))
+            {
+                File.Move(releasePath + "/deploy/libcef.dll", releasePath + "/deploy/libcefOriginal.dll");
+            }
+
+            File.Copy(payloadDllPath, releasePath + "/deploy/libcef.dll", true);
+
+            // Start league :)
+            ProcessStartInfo startInfo = new ProcessStartInfo { FileName = path, UseShellExecute = false };
+            startInfo.EnvironmentVariables["ACE_INITIAL_PAYLOAD"] = bundleJsPath;
+            startInfo.EnvironmentVariables["ACE_LOAD_PAYLOAD"] = injectJsPath;
+            Process.Start(startInfo);
+        }
+
+        // Either gets the LCU path from the saved properties, or by prompting the user.
+        static string GetLCUPath()
+        {
+            string path = Properties.Settings.Default.LCUPath;
+            bool valid = IsPathValid(path);
+
+            while (!valid)
+            {
+                // Notify that the path is invalid.
+                MessageBox.Show(
+                    "Ace could not find the LCU at " + path + ". Please select the folder containing 'LeagueClient.exe'.",
+                    "LCU not found",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Exclamation
+                );
+
+                // Ask for new path.
+                CommonOpenFileDialog dialog = new CommonOpenFileDialog();
+                dialog.Title = "Select LeagueClient.exe location.";
+                dialog.InitialDirectory = "C:/Riot Games";
+                dialog.EnsureFileExists = true;
+                dialog.EnsurePathExists = true;
+                dialog.DefaultFileName = "LeagueClient";
+                dialog.DefaultExtension = "exe";
+                dialog.Filters.Add(new CommonFileDialogFilter("Executables", ".exe"));
+                dialog.Filters.Add(new CommonFileDialogFilter("All Files", ".*"));
+                if (dialog.ShowDialog() == CommonFileDialogResult.Cancel)
+                {
+                    // User wants to cancel. Exit
+                    return null;
+                }
+
+                path = dialog.FileName;
+                valid = IsPathValid(path);
+            }
+
+            // Store choice so we don't have to ask for it again.
+            Properties.Settings.Default.LCUPath = path;
+            Properties.Settings.Default.Save();
+
+            return path;
+        }
+
+        // Possibly updates to a new version of Ace. This method is blocking.
+        // Returns true if an update was applied, false otherwise.
+        static bool Update()
+        {
+            try {
+                string json = Encoding.UTF8.GetString(RequestURL("https://api.github.com/repos/ace-lol/ace/releases").ToArray());
+                JsonArray data = SimpleJson.DeserializeObject<JsonArray>(json);
+                if (data.Count < 1) return false;
+
+                JsonObject latest = (JsonObject)data[0];
+                string release = (string)latest["tag_name"];
+                if (release == null) return false;
+
+                SemVersion newVer;
+                // If the semver isn't valid or if we are already on the newest version.
+                if (!SemVersion.TryParse(release, out newVer) || newVer <= GetBundleVersion()) return false;
+
+                JsonArray assets = (JsonArray) latest["assets"];
+                if (assets == null) return false;
+                if (assets.Count < 1) return false;
+
+                string[][] updateGroups = new string[][] {
+                    new string[]{ "bundle.js", "bundle.js" },
+                    new string[]{ "inject.js", "inject.js" },
+                    new string[]{ "payload_win.dll", "payload.dll" }
+                };
+                string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ace");
+
+                foreach (string[] group in updateGroups)
+                {
+                    JsonObject asset = (JsonObject)assets.Find(x => ((string)((JsonObject)x)["name"]) == group[0]);
+                    if (asset == null) continue;
+
+                    string path = Path.Combine(dataDir, group[1]);
+
+                    MemoryStream newData = RequestURL(((string) asset["browser_download_url"]));
+                    if (newData == null) return false;
+
+                    File.WriteAllBytes(path, newData.ToArray());
+                }
+
+                return true;
+            } catch (Exception ex) {
+                Console.WriteLine("error: " + ex);
+                return false;
+            }
+        }
+
+        // Tries to find the current version from the currently installed bundle.
+        static string GetBundleVersion()
+        {
+            string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ace");
+            string bundleJsPath = Path.Combine(dataDir, "bundle.js");
+
+            string contents = File.ReadAllText(bundleJsPath);
+            Match match = Regex.Match(contents, "window\\.ACE_VERSION\\s?=\\s?\"(.*?)\"");
+            return match.Groups[1].ToString();
+        }
+
+        // Makes a synchronous request to the provided URL.
+        static MemoryStream RequestURL(string url)
+        {
+            HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
+            request.UserAgent = "Ace"; // Somehow the response is malformed if we don't send a user agent. See http://stackoverflow.com/questions/2482715/the-server-committed-a-protocol-violation-section-responsestatusline-error
+            request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+
+            using (WebResponse response = request.GetResponse())
+            using (Stream stream = response.GetResponseStream())
+            {
+                MemoryStream ms = new MemoryStream();
+                stream.CopyTo(ms);
+                return ms;
+            }
+        }
+
+        // Kills the running LCU instance, if applicable.
+        static void KillLCU()
+        {
+            Process[] lcuCandidates = Process.GetProcessesByName("LeagueClient");
+            if (lcuCandidates.Length == 1)
+            {
+                Process lcu = lcuCandidates[0];
+                lcu.Kill();
+                lcu.WaitForExit();
+                System.Threading.Thread.Sleep(1000);
+            }
+        }
+
+        // Checks if the provided path is most likely a path where the LCU is installed.
+        static bool IsPathValid(string path)
+        {
+            string folder = Path.GetDirectoryName(path);
             return File.Exists(path) && Directory.Exists(folder + "/RADS") && Directory.Exists(folder + "/RADS/projects/league_client");
         }
 
         // Finds the newest league_client release and returns the path to that release.
-        static String GetClientProjectPath(String path)
+        static string GetClientProjectPath(string path)
         {
-            String p = Path.GetDirectoryName(path) + "/RADS/projects/league_client/releases";
+            string p = Path.GetDirectoryName(path) + "/RADS/projects/league_client/releases";
             return Directory.GetDirectories(p).Select(x => {
                 try
                 {
