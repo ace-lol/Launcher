@@ -79,25 +79,23 @@ func update() -> Bool {
         return false
     }
     
-    // Find new bundle url and download it.
-    guard let assets = lastRelease["assets"] as? Array<Any>
+    // Download new assets.
+    guard let assets = lastRelease["assets"] as? Array<[String: AnyObject]>
         else { return false }
     
-    guard let firstAsset = assets[0] as? [String: AnyObject]
-        else { return false }
-    
-    guard let assetUrl = firstAsset["browser_download_url"] as? String
-        else { return false }
-    
-    guard let assetContents = try? requestSync(url: assetUrl)
-        else { return false }
-    
-    do {
-        // Write actual file.
-        let bundleUrl = Bundle.main.url(forResource: "bundle", withExtension: "js")!
-        try assetContents.write(to: bundleUrl)
-    } catch {
-        return false
+    let assetGroups = [("bundle.js", "bundle", "js"), ("inject.js", "inject", "js"), ("payload_mac.dylib", "payload", "dylib")]
+    for group in assetGroups {
+        if let asset = assets.first(where: { ($0["name"] as! String) == group.0 }) {
+            guard let assetContents = try? requestSync(url: asset["browser_download_url"] as! String)
+                else { return false }
+            
+            do {
+                let bundleUrl = Bundle.main.url(forResource: group.1, withExtension: group.2)!
+                try assetContents.write(to: bundleUrl)
+            } catch {
+                return false
+            }
+        }
     }
     
     return true
