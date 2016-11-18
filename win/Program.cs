@@ -4,7 +4,10 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Linq;
+using System.Net;
+using Semver;
 
 namespace Ace
 {
@@ -17,18 +20,59 @@ namespace Ace
         static void Main()
         {
             try {
-                LaunchLCU(GetLCUPath());
+                string path = GetLCUPath();
+                if (path == null) return;
+
+                // If league is already running, prompt to kill it.
+                if (Process.GetProcessesByName("LeagueClient").Length > 0)
+                {
+                    DialogResult promptResult = MessageBox.Show(
+                        "The League client is already running. Do you want to stop it?",
+                        "Ace",
+                        MessageBoxButtons.OKCancel,
+                        MessageBoxIcon.Information,
+                        MessageBoxDefaultButton.Button1
+                    );
+
+                    if (promptResult == DialogResult.OK)
+                    {
+                        KillLCU();
+                    } else {
+                        // Stop ace.
+                        return;
+                    }
+                }
+
+                LaunchLCU(path);
+
+                if (Update())
+                {
+                    DialogResult promptResult = MessageBox.Show(
+                        "Ace has downloaded and installed an update, which will become active with the next restart of the League client. Do you want to restart the League client now?",
+                        "Ace Updater",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Information,
+                        MessageBoxDefaultButton.Button1
+                    );
+
+                    if (promptResult == DialogResult.Yes)
+                    {
+                        // Kill LCU, then restart it.
+                        KillLCU();
+                        LaunchLCU(path);
+                    }
+                }
             } catch (Exception e) {
                 MessageBox.Show("An error occured during startup. Please try again and do not hesitate to report the issue if it does not resolve itself. The error was: " + e.ToString(), "Error during startup.", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
         }
 
         // Launches the LCU with the provided path.
-        static void LaunchLCU(String path)
+        static void LaunchLCU(string path)
         {
-            String dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ace");
-            String injectJsPath = Path.Combine(dataDir, "inject.js");
-            String bundleJsPath = Path.Combine(dataDir, "bundle.js");
+            string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ace");
+            string injectJsPath = Path.Combine(dataDir, "inject.js");
+            string bundleJsPath = Path.Combine(dataDir, "bundle.js");
 
             // If the directory didn't exist, create it and copy the files.
             if (!Directory.Exists(dataDir))
@@ -39,7 +83,7 @@ namespace Ace
                 File.WriteAllBytes(bundleJsPath, Encoding.UTF8.GetBytes(Properties.Resources.bundle));
             }            
 
-            String releasePath = GetClientProjectPath(path);
+            string releasePath = GetClientProjectPath(path);
 
             // If libcefOriginal.dll doesn't exist, this is our first run (or after a patch).
             if (!File.Exists(releasePath + "/deploy/libcefOriginal.dll"))
@@ -58,10 +102,10 @@ namespace Ace
         }
 
         // Either gets the LCU path from the saved properties, or by prompting the user.
-        static String GetLCUPath()
+        static string GetLCUPath()
         {
-            String path = Properties.Settings.Default.LCUPath;
-            Boolean valid = IsPathValid(path);
+            string path = Properties.Settings.Default.LCUPath;
+            bool valid = IsPathValid(path);
 
             while (!valid)
             {
@@ -100,17 +144,99 @@ namespace Ace
             return path;
         }
 
-        // Checks if the provided path is most likely a path where the LCU is installed.
-        static Boolean IsPathValid(String path)
+        // Possibly updates to a new version of Ace. This method is blocking.
+        // Returns true if an update was applied, false otherwise.
+        static bool Update()
         {
-            String folder = Path.GetDirectoryName(path);
+            try {
+                string json = Encoding.UTF8.GetString(RequestURL("https://api.github.com/repos/ace-lol/ace/releases").ToArray());
+                JsonArray data = SimpleJson.DeserializeObject<JsonArray>(json);
+                if (data.Count < 1) return false;
+
+                JsonObject latest = (JsonObject) data[0];
+                string release = (string) latest["tag_name"];
+                if (release == null) return false;
+
+                SemVersion newVer;
+                // If the semver isn't valid or if we are already on the newest version.
+                if (!SemVersion.TryParse(release, out newVer) || newVer <= GetBundleVersion()) return false;
+
+                JsonArray assets = (JsonArray) latest["assets"];
+                if (assets == null) return false;
+                if (assets.Count < 1) return false;
+
+                JsonObject bundleAsset = (JsonObject) assets[0];
+                string downloadPath = (string)bundleAsset["browser_download_url"];
+                if (downloadPath == null) return false;
+
+                string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ace");
+                string bundleJsPath = Path.Combine(dataDir, "bundle.js");
+
+                // Request new version.
+                MemoryStream newData = RequestURL(downloadPath);
+                if (newData == null) return false;
+
+                // Write new version.
+                File.WriteAllBytes(bundleJsPath, newData.ToArray());
+                Console.WriteLine("updated.");
+                return true;
+            } catch (Exception ex) {
+                Console.WriteLine("error: " + ex);
+                return false;
+            }
+        }
+
+        // Tries to find the current version from the currently installed bundle.
+        static string GetBundleVersion()
+        {
+            string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ace");
+            string bundleJsPath = Path.Combine(dataDir, "bundle.js");
+
+            string contents = File.ReadAllText(bundleJsPath);
+            Match match = Regex.Match(contents, "window\\.ACE_VERSION\\s?=\\s?\"(.*?)\"");
+            return match.Groups[1].ToString();
+        }
+
+        // Makes a synchronous request to the provided URL.
+        static MemoryStream RequestURL(string url)
+        {
+            HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
+            request.UserAgent = "Ace"; // Somehow the response is malformed if we don't send a user agent. See http://stackoverflow.com/questions/2482715/the-server-committed-a-protocol-violation-section-responsestatusline-error
+            request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+
+            using (WebResponse response = request.GetResponse())
+            using (Stream stream = response.GetResponseStream())
+            {
+                MemoryStream ms = new MemoryStream();
+                stream.CopyTo(ms);
+                return ms;
+            }
+        }
+
+        // Kills the running LCU instance, if applicable.
+        static void KillLCU()
+        {
+            Process[] lcuCandidates = Process.GetProcessesByName("LeagueClient");
+            if (lcuCandidates.Length == 1)
+            {
+                Process lcu = lcuCandidates[0];
+                lcu.Kill();
+                lcu.WaitForExit();
+                System.Threading.Thread.Sleep(1000);
+            }
+        }
+
+        // Checks if the provided path is most likely a path where the LCU is installed.
+        static bool IsPathValid(string path)
+        {
+            string folder = Path.GetDirectoryName(path);
             return File.Exists(path) && Directory.Exists(folder + "/RADS") && Directory.Exists(folder + "/RADS/projects/league_client");
         }
 
         // Finds the newest league_client release and returns the path to that release.
-        static String GetClientProjectPath(String path)
+        static string GetClientProjectPath(string path)
         {
-            String p = Path.GetDirectoryName(path) + "/RADS/projects/league_client/releases";
+            string p = Path.GetDirectoryName(path) + "/RADS/projects/league_client/releases";
             return Directory.GetDirectories(p).Select(x => {
                 try
                 {
