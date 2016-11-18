@@ -73,6 +73,7 @@ namespace Ace
             string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ace");
             string injectJsPath = Path.Combine(dataDir, "inject.js");
             string bundleJsPath = Path.Combine(dataDir, "bundle.js");
+            string payloadDllPath = Path.Combine(dataDir, "payload.dll");
 
             // If the directory didn't exist, create it and copy the files.
             if (!Directory.Exists(dataDir))
@@ -81,6 +82,7 @@ namespace Ace
 
                 File.WriteAllBytes(injectJsPath, Encoding.UTF8.GetBytes(Properties.Resources.inject));
                 File.WriteAllBytes(bundleJsPath, Encoding.UTF8.GetBytes(Properties.Resources.bundle));
+                File.WriteAllBytes(payloadDllPath, Properties.Resources.Payload);
             }            
 
             string releasePath = GetClientProjectPath(path);
@@ -91,8 +93,7 @@ namespace Ace
                 File.Move(releasePath + "/deploy/libcef.dll", releasePath + "/deploy/libcefOriginal.dll");
             }
 
-            // Overwrite the dll every time, just in case.
-            File.WriteAllBytes(releasePath + "/deploy/libcef.dll", Properties.Resources.Payload);
+            File.Copy(payloadDllPath, releasePath + "/deploy/libcef.dll", true);
 
             // Start league :)
             ProcessStartInfo startInfo = new ProcessStartInfo { FileName = path, UseShellExecute = false };
@@ -153,8 +154,8 @@ namespace Ace
                 JsonArray data = SimpleJson.DeserializeObject<JsonArray>(json);
                 if (data.Count < 1) return false;
 
-                JsonObject latest = (JsonObject) data[0];
-                string release = (string) latest["tag_name"];
+                JsonObject latest = (JsonObject)data[0];
+                string release = (string)latest["tag_name"];
                 if (release == null) return false;
 
                 SemVersion newVer;
@@ -165,20 +166,26 @@ namespace Ace
                 if (assets == null) return false;
                 if (assets.Count < 1) return false;
 
-                JsonObject bundleAsset = (JsonObject) assets[0];
-                string downloadPath = (string)bundleAsset["browser_download_url"];
-                if (downloadPath == null) return false;
-
+                string[][] updateGroups = new string[][] {
+                    new string[]{ "bundle.js", "bundle.js" },
+                    new string[]{ "inject.js", "inject.js" },
+                    new string[]{ "payload_win.dll", "payload.dll" }
+                };
                 string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ace");
-                string bundleJsPath = Path.Combine(dataDir, "bundle.js");
 
-                // Request new version.
-                MemoryStream newData = RequestURL(downloadPath);
-                if (newData == null) return false;
+                foreach (string[] group in updateGroups)
+                {
+                    JsonObject asset = (JsonObject)assets.Find(x => ((string)((JsonObject)x)["name"]) == group[0]);
+                    if (asset == null) continue;
 
-                // Write new version.
-                File.WriteAllBytes(bundleJsPath, newData.ToArray());
-                Console.WriteLine("updated.");
+                    string path = Path.Combine(dataDir, group[1]);
+
+                    MemoryStream newData = RequestURL(((string) asset["browser_download_url"]));
+                    if (newData == null) return false;
+
+                    File.WriteAllBytes(path, newData.ToArray());
+                }
+
                 return true;
             } catch (Exception ex) {
                 Console.WriteLine("error: " + ex);
