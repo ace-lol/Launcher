@@ -28,16 +28,6 @@
 		9CED2F8A1DDDEFC300BAD78C /* Semver.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Semver.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
-/* Begin PBXFrameworksBuildPhase section */
-		9C488F7A1DCCE2B2005D70A0 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXFrameworksBuildPhase section */
-
 /* Begin PBXGroup section */
 		9C1175991DDFB7F500E48E60 /* Sources */ = {
 			isa = PBXGroup;
@@ -94,9 +84,8 @@
 			buildConfigurationList = 9C488F8A1DCCE2B3005D70A0 /* Build configuration list for PBXNativeTarget "Ace" */;
 			buildPhases = (
 				9C488F791DCCE2B2005D70A0 /* Sources */,
-				9C488F7A1DCCE2B2005D70A0 /* Frameworks */,
-				9C488F7B1DCCE2B2005D70A0 /* Resources */,
 				9C2930D71DD4D1ED0098DBBA /* ShellScript */,
+				9C488F7B1DCCE2B2005D70A0 /* Resources */,
 			);
 			buildRules = (
 			);
