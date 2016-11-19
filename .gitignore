@@ -3,12 +3,18 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Ace files
+bundle.js
+
 # User-specific files
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
 *.vcxproj.filters
+
+# User-specific files (Xcode)
+xcuserdata/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
