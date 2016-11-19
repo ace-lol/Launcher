@@ -13,6 +13,8 @@ namespace Ace
 {
     static class Program
     {
+        static string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ace");
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -20,6 +22,8 @@ namespace Ace
         static void Main()
         {
             try {
+                if (!Directory.Exists(dataDir)) Directory.CreateDirectory(dataDir);
+
                 string path = GetLCUPath();
                 if (path == null) return;
 
@@ -70,16 +74,13 @@ namespace Ace
         // Launches the LCU with the provided path.
         static void LaunchLCU(string path)
         {
-            string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ace");
             string injectJsPath = Path.Combine(dataDir, "inject.js");
             string bundleJsPath = Path.Combine(dataDir, "bundle.js");
             string payloadDllPath = Path.Combine(dataDir, "payload.dll");
 
             // If the directory didn't exist, create it and copy the files.
-            if (!Directory.Exists(dataDir))
+            if (!File.Exists(bundleJsPath))
             {
-                Directory.CreateDirectory(dataDir);
-
                 File.WriteAllBytes(injectJsPath, Encoding.UTF8.GetBytes(Properties.Resources.inject));
                 File.WriteAllBytes(bundleJsPath, Encoding.UTF8.GetBytes(Properties.Resources.bundle));
                 File.WriteAllBytes(payloadDllPath, Properties.Resources.Payload);
@@ -105,14 +106,15 @@ namespace Ace
         // Either gets the LCU path from the saved properties, or by prompting the user.
         static string GetLCUPath()
         {
-            string path = Properties.Settings.Default.LCUPath;
+            string configPath = Path.Combine(dataDir, "lcuPath");
+            string path = File.Exists(configPath) ? File.ReadAllText(configPath) : "C:/Riot Games/League of Legends/LeagueClient.exe";
             bool valid = IsPathValid(path);
 
             while (!valid)
             {
                 // Notify that the path is invalid.
                 MessageBox.Show(
-                    "Ace could not find the LCU at " + path + ". Please select the folder containing 'LeagueClient.exe'.",
+                    "Ace could not find the LCU at " + path + ". Please select the location of 'LeagueClient.exe'.",
                     "LCU not found",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Exclamation
@@ -121,7 +123,7 @@ namespace Ace
                 // Ask for new path.
                 CommonOpenFileDialog dialog = new CommonOpenFileDialog();
                 dialog.Title = "Select LeagueClient.exe location.";
-                dialog.InitialDirectory = "C:/Riot Games";
+                dialog.InitialDirectory = "C:\\Riot Games\\League of Legends";
                 dialog.EnsureFileExists = true;
                 dialog.EnsurePathExists = true;
                 dialog.DefaultFileName = "LeagueClient";
@@ -139,8 +141,7 @@ namespace Ace
             }
 
             // Store choice so we don't have to ask for it again.
-            Properties.Settings.Default.LCUPath = path;
-            Properties.Settings.Default.Save();
+            File.WriteAllText(configPath, path);
 
             return path;
         }
@@ -171,7 +172,6 @@ namespace Ace
                     new string[]{ "inject.js", "inject.js" },
                     new string[]{ "payload_win.dll", "payload.dll" }
                 };
-                string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ace");
 
                 foreach (string[] group in updateGroups)
                 {
@@ -196,7 +196,6 @@ namespace Ace
         // Tries to find the current version from the currently installed bundle.
         static string GetBundleVersion()
         {
-            string dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ace");
             string bundleJsPath = Path.Combine(dataDir, "bundle.js");
 
             string contents = File.ReadAllText(bundleJsPath);

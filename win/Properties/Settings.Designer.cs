@@ -22,17 +22,5 @@ namespace Ace.Properties {
                 return defaultInstance;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("C:/Riot Games/League of Legends/LeagueClient.exe")]
-        public string LCUPath {
-            get {
-                return ((string)(this["LCUPath"]));
-            }
-            set {
-                this["LCUPath"] = value;
-            }
-        }
     }
 }
