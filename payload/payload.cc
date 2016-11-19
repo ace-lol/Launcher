@@ -41,6 +41,7 @@
 #include "include/capi/cef_app_capi.h"
 #include "include/capi/cef_client_capi.h"
 #include "include/capi/cef_request_handler_capi.h"
+#include "include/capi/cef_command_line_capi.h"
 
 #define INITIAL_PAYLOAD getenv("ACE_INITIAL_PAYLOAD")
 #define LOAD_PAYLOAD getenv("ACE_LOAD_PAYLOAD")
@@ -134,12 +135,32 @@ extern "C" {
         return ret;
     }
 
+#ifdef _WIN32
+    #define CEF_STR(name, tmp, contents) cef_string_t name = {}; const char* tmp = contents; cef_string_from_ascii(tmp, strlen(tmp), &name)
+
+    // Used to hook the command line arguments on Windows, since the cef_settings_t structure does not seem to work.
+    void CEF_CALLBACK process_command_line(struct _cef_app_t* self, const cef_string_t* process_type, struct _cef_command_line_t* command_line) {
+        CEF_STR(ignore_errors_cef, ignore_errors, "ignore-certificate-errors");
+        command_line->append_switch(command_line, &ignore_errors_cef);
+
+        CEF_STR(remote_debugging_cef, remote_debugging, "remote-debugging-port");
+        CEF_STR(value_cef, value, "8888");
+        command_line->append_switch_with_value(command_line, &remote_debugging_cef, &value_cef);
+    }
+#endif
+
     // Called at the very start before any other cef_** functions are ran.
     // We use this to enable remote debugging and the ignoring of certificate errors.
     int CEF_EXPORT wrapped_cef_initialize(const cef_main_args_t* args, const cef_settings_t* settings, cef_app_t* application, void* windows_sandbox_info) {
         cef_settings_t* mutable_settings = (cef_settings_t*) settings;
         mutable_settings->remote_debugging_port = 8888;
         mutable_settings->ignore_certificate_errors = 1;
+
+#ifdef _WIN32
+        if (application) {
+            application->on_before_command_line_processing = process_command_line;
+        }
+#endif
 
         return cef_initialize(args, settings, application, windows_sandbox_info);
     }
