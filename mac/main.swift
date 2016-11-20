@@ -137,20 +137,28 @@ func killLCU() {
 
 // ==== Main code ====
 if let lcuPath = getLeagueAppPath() {
-    // Launch the LCU with ace injected.
-    startAce(path: lcuPath)
+    if ProcessInfo().isOperatingSystemAtLeast(OperatingSystemVersion(majorVersion: 10, minorVersion: 12, patchVersion: 0)) {
+        // Launch the LCU with ace injected.
+        startAce(path: lcuPath)
     
-    // If we updated, let the user know.
-    if update() {
-        let alert = NSAlert()
-        alert.messageText = "Ace has downloaded and installed an update, which will become active with the next restart of the League client. Do you want to restart the League client now?"
-        alert.addButton(withTitle: "Restart")
-        alert.addButton(withTitle: "Later")
-        
-        // If the user wants to restart, kill the LCU and start it again.
-        if alert.runModal() == NSAlertFirstButtonReturn {
-            killLCU()
-            startAce(path: lcuPath)
+        // If we updated, let the user know.
+        if update() {
+            let alert = NSAlert()
+            alert.messageText = "Ace has downloaded and installed an update, which will become active with the next restart of the League client. Do you want to restart the     League client now?"
+            alert.addButton(withTitle: "Restart")
+            alert.addButton(withTitle: "Later")
+    
+            // If the user wants to restart, kill the LCU and start it again.
+            if alert.runModal() == NSAlertFirstButtonReturn {
+                killLCU()
+                startAce(path: lcuPath)
+           }
         }
+    } else {
+        let alert = NSAlert()
+        alert.messageText = "Ace is not currently compatible with versions of macOS before 10.12."
+        alert.addButton(withTitle: "rip")
+        alert.runModal()
+        exit(0)
     }
 }
